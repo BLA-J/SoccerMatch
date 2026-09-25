@@ -1,0 +1,32 @@
+name: SoccerMatch
+version: 1.0.0
+main: mcsc.plugin.soccer.SoccerPlugin
+api-version: '1.21'
+description: Minecraft 足球比赛裁判插件
+author: MCSC
+prefix: SoccerMatch
+
+commands:
+  y:
+    description: 出示黄牌 / 撤销黄牌
+    usage: /y <玩家ID>  或  /y undo
+  r:
+    description: 出示红牌并罚下
+    usage: /r <玩家ID>
+  js:
+    description: 比赛控制（开始/暂停/继续/结束/进球）
+    usage: /js <start|stop|restart|end|goal|reload>
+  soccerstatus:
+    description: 切换上下半场（true=上半场 false=下半场）
+    usage: /soccerstatus <true|false>
+  tc:
+    description: 队内聊天，仅同队队员与 OP 可见
+    usage: /tc <内容>
+
+permissions:
+  soccer.referee:
+    description: 允许使用裁判命令
+    default: op
+  soccer.play:
+    description: 允许使用队内聊天
+    default: true

@@ -1,0 +1,407 @@
+# =====================================================
+#  SoccerMatch - Minecraft 足球比赛裁判插件
+#  颜色代码统一使用 & 符号，例如 &c 红色 &l 加粗
+#  修改后使用 /js reload 重载，无需重启服务器
+# =====================================================
+
+match:
+  # 每个半场的时长（秒）。600 = 10 分钟
+  duration: 600
+
+  # 开球前的 3-2-1 倒计时秒数。设为 0 可跳过
+  countdown: 3
+
+  # 开球倒计时期间冻结所有球员，防止抢跑
+  freeze-on-countdown: true
+
+  # 比赛暂停期间冻结所有球员，防止趁暂停占位
+  freeze-on-pause: true
+
+  # 冻结时是否同时禁止玩家攻击/交互
+  # 开启后冻结期间无法击打硫磺怪，可防止提前开球
+  freeze-blocks-interact: true
+
+  # 冻结是否豁免 OP（裁判需要在场上走动，建议保持 true）
+  freeze-exempt-op: true
+
+  # 冻结是否只作用于有队伍 tag 的球员
+  # true  = 只冻球员，观众可自由走动（推荐）
+  # false = 冻结全服所有人
+  freeze-players-only: true
+
+  # 切换上下半场时是否把倒计时重置为 duration
+  # true  = 切半场自动重置计时（推荐）
+  # false = 只改计分板上的半场标识，计时不受影响
+  reset-timer-on-half-change: true
+
+  # 切换半场后是否自动暂停，等裁判 /js restart 再开
+  pause-after-half-change: true
+
+  # 进球冷却（秒）。球门绊线钩会因球体滚动连续输出红石信号，
+  # 若不设冷却，一次进球可能被记成好几分。设为 0 关闭。
+  goal-cooldown: 3
+
+# =====================================================
+#  计分板（侧边栏）
+# =====================================================
+scoreboard:
+  enabled: true
+
+  # 侧边栏标题，也就是玩家看到的最上方那行大字
+  title: '&6&l⚽ 足球比赛'
+
+  # 计分板 objective 的内部名称，一般不用改
+  # 只有和其他插件/命令方块冲突时才需要修改
+  objective-name: 'soccer_match'
+
+  # 侧边栏各行文案，支持占位符：
+  #   %time%       剩余时间 mm:ss
+  #   %half%       上半场 / 下半场
+  #   %red%        红队比分
+  #   %blue%       蓝队比分
+  #   %team%       该玩家所属队伍（观众显示"观众"）
+  #   %state%      比赛状态
+  # 想删掉某一行，直接把它从列表里去掉即可
+  lines:
+    - '&7&m                    '
+    - '&f阶段: &e%half%'
+    - '&f剩余: &a%time%'
+    - ''
+    - '&c● 红队  &f%red%'
+    - '&9● 蓝队  &f%blue%'
+    - ''
+    - '&f你的队伍: %team%'
+    - '&7&m                    '
+
+# =====================================================
+#  BossBar 计时条（屏幕正上方）
+# =====================================================
+bossbar:
+  enabled: true
+
+  # 文案占位符同上
+  title: '&f%half%  &e%time%   &c%red% &f: &9%blue%'
+
+  # 可选颜色: PINK BLUE RED GREEN YELLOW PURPLE WHITE
+  color: 'GREEN'
+
+  # 剩余时间低于该秒数时变色告警，设为 0 关闭
+  warn-time: 60
+  warn-color: 'RED'
+
+  # 可选样式: PROGRESS NOTCHED_6 NOTCHED_10 NOTCHED_12 NOTCHED_20
+  style: 'PROGRESS'
+
+# =====================================================
+#  队伍设置
+#  玩家通过原版 tag 分队：/tag @p add red
+# =====================================================
+teams:
+  red:
+    tag: 'red'
+    display: '&c红队'
+  blue:
+    tag: 'blue'
+    display: '&9蓝队'
+
+  # 没有任何队伍 tag 的玩家显示为
+  spectator-display: '&7观众'
+
+# =====================================================
+#  红黄牌
+# =====================================================
+cards:
+  # 累计多少张黄牌自动触发罚下（三黄变一红）
+  yellow-to-red: 3
+
+  # 罚下后传送的坐标
+  send-off:
+    enabled: true
+    world: 'world'
+    x: 0.5
+    y: 100.0
+    z: 0.5
+    yaw: 0.0
+    pitch: 0.0
+
+    # 罚下时是否移除该玩家的队伍 tag（移除后他不再计入任何队伍）
+    remove-team-tag: true
+
+    # 罚下时是否切换为旁观者模式
+    set-spectator: false
+
+  # 撤销黄牌时，如果该玩家此前因累计黄牌被罚下，
+  # 是否把他传送回罚下前的位置
+  undo-restores-position: true
+
+  # 比赛结束时是否清空所有黄牌红牌记录
+  clear-on-match-end: true
+
+# =====================================================
+#  Title 大字文案
+# =====================================================
+titles:
+  yellow-card:
+    main: '&e&l警告'
+    sub: '&f%player%'
+  red-card:
+    main: '&c&l罚下'
+    sub: '&f%player%'
+  yellow-undo:
+    main: '&a&l裁判撤销黄牌'
+    sub: '&f%player%'
+  match-start:
+    main: '&a&l比赛开始'
+    sub: '&f%half%'
+  match-pause:
+    main: '&e&l比赛暂停'
+    sub: ''
+  match-resume:
+    main: '&a&l比赛继续'
+    sub: ''
+  match-end:
+    main: '&6&l比赛结束'
+    # %result% 会替换为 "红队获胜" / "蓝队获胜" / "双方平局"
+    sub: '&f%result%'
+  goal:
+    main: '&6&l进球！'
+    sub: '&f%team% &7-  &c%red% &f: &9%blue%'
+  half-change:
+    main: '&b&l%half%'
+    sub: ''
+
+  # 开球 3-2-1 大字样式，%n% 会替换为当前数字
+  countdown-format: '&e&l%n%'
+
+  # Title 显示时间（单位 tick，20 tick = 1 秒）
+  fade-in: 10
+  stay: 50
+  fade-out: 10
+
+# =====================================================
+#  音效（原版音效，无需资源包）
+#  设为 '' 可关闭对应音效
+# =====================================================
+sounds:
+  countdown-tick: 'block.note_block.hat'
+  whistle: 'entity.arrow.hit_player'
+  goal: 'entity.player.levelup'
+  yellow-card: 'block.note_block.pling'
+  red-card: 'entity.wither.spawn'
+  match-end: 'ui.toast.challenge_complete'
+  positioning: 'entity.enderman.teleport'
+
+# =====================================================
+#  聊天提示语
+# =====================================================
+messages:
+  prefix: '&8[&6⚽&8] &r'
+  no-permission: '&c你没有权限执行此操作。'
+  player-not-found: '&c玩家 &e%player% &c不在线或不存在，操作未执行。'
+  usage-yellow: '&c用法: /y <玩家ID>  或  /y undo'
+  usage-red: '&c用法: /r <玩家ID>'
+  usage-js: '&c用法: /js <start|stop|restart|end|goal|reload>'
+  usage-status: '&c用法: /soccerstatus <true|false>   (true=上半场, false=下半场)'
+  usage-tc: '&c用法: /tc <内容>'
+
+  match-already-running: '&c比赛进行中，不能重复开始。'
+  match-not-started: '&c比赛未开始，不能进行此操作。'
+  match-not-paused: '&c比赛未暂停，不能进行此操作。'
+  match-already-paused: '&c比赛已经处于暂停状态。'
+  match-starting: '&a比赛即将开始，请就位！'
+  match-stopped: '&e比赛已暂停。'
+  match-resumed: '&a比赛已继续。'
+  match-ended: '&6比赛已结束。'
+
+  card-yellow-broadcast: '&e[黄牌] &f%player% &7(第 %count% 张)'
+  card-red-broadcast: '&c[红牌] &f%player% &7已被罚下'
+  card-auto-red: '&c%player% &7累计 %count% 张黄牌，自动罚下！'
+  card-undo-success: '&a已撤销 &f%player% &a的一张黄牌，其当前黄牌数: %count%'
+  card-undo-empty: '&c当前没有可撤销的黄牌记录。'
+  card-undo-restored: '&a已将 &f%player% &a传送回罚下前的位置。'
+
+  goal-broadcast: '&6[进球] %team% &7得分！当前比分 &c%red% &f: &9%blue%'
+  goal-usage: '&c用法: /js goal <red|blue> [进球球员]  (可由命令方块调用)'
+  goal-cooldown: '&7进球冷却中，本次信号已忽略（防止绊线钩重复计分）。'
+
+  half-switched: '&b已切换至 &f%half%'
+  half-same: '&e当前已经是 %half%，无需切换。'
+
+  team-chat-format: '&8[&f队内&8] %team% &f%player%&7: &f%message%'
+  team-chat-no-team: '&c你不属于任何队伍，无法使用队内聊天。'
+
+  frozen: '&c比赛尚未开始，你暂时无法移动！'
+  reloaded: '&a配置已重载。'
+
+  result-red-win: '红队获胜'
+  result-blue-win: '蓝队获胜'
+  result-draw: '双方平局'
+
+  positioning-not-paused: '&c比赛未暂停，站位杖无效。'
+  positioning-done: '&a双方球员已按模板站位（共 %count% 人）。'
+  positioning-no-template: '&c站位模板未配置，请检查 config.yml。'
+  positioning-no-players: '&c没有在线球员可站位。'
+
+# =====================================================
+#  裁判物品（右键触发）
+#  在铁砧上将指定物品改名为对应显示名即可绑定
+#  仅 OP 或拥有 soccer.referee 权限的玩家可使用
+# =====================================================
+referee-items:
+  enabled: true
+
+  # 右键冷却（毫秒），防止快速连点导致状态反复切换
+  click-cooldown: 500
+
+  # 裁判哨：右键暂停/继续比赛（完全等价 /js stop / /js restart）
+  # 材质必须是原版物品名，如 PAPER / STICK / CLOCK 等
+  whistle:
+    material: PAPER
+    display-name: '裁判哨'
+
+  # 站位杖：暂停期间右键，双方球员按模板站位
+  positioning-wand:
+    material: STICK
+    display-name: '站位杖'
+
+# =====================================================
+#  站位模板
+#  以裁判右键站位杖时的位置为发球点
+#  偏移跟随裁判面朝方向旋转（裁判朝哪，阵型就朝哪展开）
+#
+#  坐标系说明（以裁判面朝方向为基准）：
+#    x     = 右侧偏移（正=裁判右手边，负=左手边）
+#    y     = 垂直偏移（正=上方，负=下方）
+#    z     = 前方偏移（正=裁判前方，负=后方）
+#    yaw   = 球员面朝偏转（0=同裁判朝向，180=面向裁判）
+#    pitch = 俯仰角（0=平视，90=低头看地）
+#
+#  在线球员按名字母序填入槽位，人少则空着，多余的不站位
+# =====================================================
+positioning:
+  # 每队站位槽位上限
+  max-slots: 11
+
+  # 红队模板（4-4-2 阵型，球员在裁判后方展开，面朝前方）
+  red:
+    # 守门员
+    - x: 0.0
+      y: 0.0
+      z: -25.0
+      yaw: 0.0
+      pitch: 0.0
+    # 后卫线
+    - x: -8.0
+      y: 0.0
+      z: -15.0
+      yaw: 0.0
+      pitch: 0.0
+    - x: -3.0
+      y: 0.0
+      z: -17.0
+      yaw: 0.0
+      pitch: 0.0
+    - x: 3.0
+      y: 0.0
+      z: -17.0
+      yaw: 0.0
+      pitch: 0.0
+    - x: 8.0
+      y: 0.0
+      z: -15.0
+      yaw: 0.0
+      pitch: 0.0
+    # 中场线
+    - x: -6.0
+      y: 0.0
+      z: -8.0
+      yaw: 0.0
+      pitch: 0.0
+    - x: -2.0
+      y: 0.0
+      z: -10.0
+      yaw: 0.0
+      pitch: 0.0
+    - x: 2.0
+      y: 0.0
+      z: -10.0
+      yaw: 0.0
+      pitch: 0.0
+    - x: 6.0
+      y: 0.0
+      z: -8.0
+      yaw: 0.0
+      pitch: 0.0
+    # 前锋
+    - x: -3.0
+      y: 0.0
+      z: -3.0
+      yaw: 0.0
+      pitch: 0.0
+    - x: 3.0
+      y: 0.0
+      z: -3.0
+      yaw: 0.0
+      pitch: 0.0
+
+  # 蓝队模板（镜像：球员在裁判前方展开，面朝裁判方向）
+  blue:
+    # 守门员
+    - x: 0.0
+      y: 0.0
+      z: 25.0
+      yaw: 180.0
+      pitch: 0.0
+    # 后卫线（x 与红队取反，形成镜像）
+    - x: 8.0
+      y: 0.0
+      z: 15.0
+      yaw: 180.0
+      pitch: 0.0
+    - x: 3.0
+      y: 0.0
+      z: 17.0
+      yaw: 180.0
+      pitch: 0.0
+    - x: -3.0
+      y: 0.0
+      z: 17.0
+      yaw: 180.0
+      pitch: 0.0
+    - x: -8.0
+      y: 0.0
+      z: 15.0
+      yaw: 180.0
+      pitch: 0.0
+    # 中场线
+    - x: 6.0
+      y: 0.0
+      z: 8.0
+      yaw: 180.0
+      pitch: 0.0
+    - x: 2.0
+      y: 0.0
+      z: 10.0
+      yaw: 180.0
+      pitch: 0.0
+    - x: -2.0
+      y: 0.0
+      z: 10.0
+      yaw: 180.0
+      pitch: 0.0
+    - x: -6.0
+      y: 0.0
+      z: 8.0
+      yaw: 180.0
+      pitch: 0.0
+    # 前锋
+    - x: 3.0
+      y: 0.0
+      z: 3.0
+      yaw: 180.0
+      pitch: 0.0
+    - x: -3.0
+      y: 0.0
+      z: 3.0
+      yaw: 180.0
+      pitch: 0.0
